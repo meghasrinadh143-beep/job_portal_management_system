@@ -196,5 +196,3 @@ The project demonstrates:
 - Relational Database Concepts
 - Views
 - Transactions
-
-## 📁 Suggested Repository Structure
