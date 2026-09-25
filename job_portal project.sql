@@ -52,6 +52,70 @@ INSERT INTO Interviews VALUES
 
 select * from interviews;
 
+#yuvaraj part of query's 
+#1. List all jobs.
+select title from jobs;
+select * from jobs;
+
+#2.Show applications with candidate names.
+select a.application_id, a.job_id , a.application_date, a.status, c.full_name from applications a join candidates c on a.candidate_id = c.candidate_id;
+
+#3.Display employer names in uppercase/lowercase.
+select company_name, upper(company_name) as upper_name, lower(company_name) as lower_name from employers;
+
+#5	Show the first five characters of every company name.
+select left(company_name, 5) as first_five from employers;
+
+#6	Concatenate the candidate's name and city.
+select concat(full_name, ' - ', city) as concatenate from candidates;
+
+#7	Replace the word Engineer with Specialist in job titles.
+select title, replace(title, 'Engineer', 'Specialist') as new_title from jobs;
+
+#8	Find all jobs where the title contains the word Developer.
+select * from jobs where title like '%developer%';
+
+#9	Find jobs in Hyderabad.
+select title, location from jobs where location = 'hyderabad';
+
+#siddarth part of query's 
+#10. Applications in last 7 days. 
+select application_date from applications order by application_date desc limit 7;
+
+#11. Count jobs company-wise. 
+select e.company_name, count(job_id) as job_count from employers e join jobs j on e.employer_id=j.employer_id group by 1;
+
+#12. Format application dates in the format: Mon-Jul-26 
+select date_format(application_date, "%a-%b-%y") from applications ;
+
+#13. Find candidates whose interviews are scheduled today. 
+select c.full_name,a.application_date from candidates c join applications a on c.candidate_id=a.candidate_id
+join interviews i on a.application_id=i.application_id where i.interview_date=curdate();
+
+#14. Show the number of days since each application was submitted.
+select application_id,datediff(curdate(),application_date) as no_of_days from applications;
+
+#15. Display the highest and lowest salary offered. 
+select max(salary)  as highest_salary, min(salary)  as lowest_salary from jobs;
+
+#16. Calculate the total salary budget offered by each company.
+select e.company_name,sum(j.salary) as salary_budget from employers e join jobs j on e.employer_id =j.employer_id group by 1;
+
+#17. Count applications by status. 
+select status, count(*) as application_counnt from applications group by status;
+
+#18. Employer with most jobs. 
+select e.company_name,count(j.job_id) as job_count from jobs j join employers e on e.employer_id =j.employer_id group by e.company_name order by  job_count desc limit 1 ;
+
+#19. Candidate with most applications.
+select c.full_name,count(a.application_id)  as most_application from applications a join candidates c on a.candidate_id = c.candidate_id group by 1 order by most_application limit 1;
+
+#20. Selected candidates. 
+select c.full_name, i.result from candidates c join applications a on  c.candidate_id = a.candidate_id join interviews i on i.application_id = a.application_id where i.result = "selected";
+
+
+
+
 #21. Rejected applications. 
 select * from applications where status = "rejected";
 
@@ -92,7 +156,37 @@ join applications a on a.job_id = j.job_id group by 1;
 select c.full_name as candidate_name, a.application_id from applications a left join candidates c on c.candidate_id = a.candidate_id
 where a.application_id is null ;
 
+#31.	Find candidates who applied for the highest-paying job.
+select c.full_name, j.title, j.salary from candidates c join applications a on c.candidate_id = a.candidate_id join jobs j on j.job_id = a.job_id
+where j.salary = (select max(salary) from jobs);
+ 
+#33.	Display candidates who have never attended an interview.
+select c.candidate_id, c.full_name from candidates c left join applications a on a.candidate_id = c.candidate_id left join interviews i on i.application_id = a.application_id
+where i.interview_id is null;
+
+#34.Create a view named Selected_Candidates showing selected candidates with company and job details. 
+create view Selected_candidates as select c.candidate_id,c.full_name,e.company_name,j.title,j.location,j.salary from candidates c 
+join applications a on c.candidate_id = a.candidate_id 
+join jobs j on a.job_id = j.job_id 
+join employers e on j.employer_id=e.employer_id
+where a.status = "selected";
+
+#35. Create a view to display all active job postings. 
+create view active_jobs as select e.company_name,j.job_id,j.title,j.location,j.salary from jobs j join employers e on j.employer_id = e.employer_id;
+
+#36. Retrieve data from the created views. 
+select * from Selected_candidates;
+select * from active_jobs;
+
 select * from applications;
+
+#stored procedures
+#Create a stored procedure to display all jobs offered by a particular employer. 
+# Input: employer_id  
+# Display job title, location, and salary.
+
+call job_details(101);
+
 #38. Roll back a transaction after deleting an application accidentally. 
 begin;
 delete from applications where application_id = 1;
@@ -104,57 +198,4 @@ update applications set status = "interview" where application_id = 6;
 savepoint sp1;
 rollback;
 commit;
-select * from applications;
-
-#siddarth part of query's 
-#10. Applications in last 7 days. 
-select application_date from applications order by application_date desc limit 7;
-
-#11. Count jobs company-wise. 
-select e.company_name, count(job_id) as job_count from employers e join jobs j on e.employer_id=j.employer_id group by 1;
-
-#12. Format application dates in the format: Mon-Jul-26 
-select date_format(application_date, "%a-%b-%y") from applications ;
-
-#13. Find candidates whose interviews are scheduled today. 
-select c.full_name,a.application_date from candidates c join applications a on c.candidate_id=a.candidate_id
-join interviews i on a.application_id=i.application_id where i.interview_date=curdate();
-
-#14. Show the number of days since each application was submitted.
-select application_id,datediff(curdate(),application_date) as no_of_days from applications;
-
-#15. Display the highest and lowest salary offered. 
-select max(salary)  as highest_salary, min(salary)  as lowest_salary from jobs;
-
-#16. Calculate the total salary budget offered by each company.
-select e.company_name,sum(j.salary) as salary_budget from employers e join jobs j on e.employer_id =j.employer_id group by 1;
-
-#17. Count applications by status. 
-select status, count(*) as application_counnt from applications group by status;
-
-#18. Employer with most jobs. 
-select e.company_name,count(j.job_id) as job_count from jobs j join employers e on e.employer_id =j.employer_id group by e.company_name order by  job_count desc limit 1 ;
-
-#19. Candidate with most applications.
-select c.full_name,count(a.application_id)  as most_application from applications a join candidates c on a.candidate_id = c.candidate_id group by 1 order by most_application limit 1;
-
-#20. Selected candidates. 
-select c.full_name, i.result from candidates c join applications a on  c.candidate_id = a.candidate_id join interviews i on i.application_id = a.application_id where i.result = "selected";
-
-
-
-#34.Create a view named Selected_Candidates showing selected candidates with company and job details. 
-create view Selected_candidates as select c.candidate_id,c.full_name,e.company_name,j.title,j.location,j.salary from candidates c 
-join applications a on c.candidate_id = a.candidate_id 
-join jobs j on a.job_id = j.job_id 
-join employers e on j.employer_id=e.employer_id
-where a.status = "selected";
-
-
-
-#35. Create a view to display all active job postings. 
-create view active_jobs as select e.company_name,j.job_id,j.title,j.location,j.salary from jobs j join employers e on j.employer_id = e.employer_id;
-
-#36. Retrieve data from the created views. 
-select * from Selected_candidates;
-select * from active_jobs;
+select * from applications
